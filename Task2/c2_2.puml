@@ -1,0 +1,38 @@
+@startuml C2_Альтернативное_решение
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C2 — Альтернативное решение (Толстые Rust-агенты)
+
+Person(фермер, "Фермер", "Доступ к локальной панели, управление фермой")
+Person(ветеринар, "Ветеринар", "Локальные отчёты и уведомления")
+Person(менеджер, "Менеджер", "Смотрит агрегированные данные (центральный сервер)")
+Person(дежурный, "Дежурный", "Получает локальные уведомления")
+
+System_Boundary(ферма, "Агенты на фермах") {
+  Container(agent, "Farm Agent", "Rust", "Основная аналитика (поведение животных, драки, здоровье), планирование кормления, локальная база данных, управление кормушками и поилками")
+  Container(alerting_agent, "Alerting Module (Local)", "Rust", "Генерация уведомлений на месте (SMS, Push, Email)")
+  Container(local_db, "Local Time-Series DB", "SQLite/InfluxDB", "Хранение видеопотоков, событий и метрик для каждой фермы")
+  Container(local_ui, "Local Web UI", "React", "Панель для фермера/ветеринара")
+}
+
+System_Boundary(центральный, "Центральный сервер (минимальный)") {
+  Container(central_analytics, "Central Analytics", "Kotlin/Spring", "Получение агрегированных данных от агентов, долгосрочные отчёты")
+  ContainerDb(central_db, "Central DB", "PostgreSQL", "Хранение сводных данных")
+}
+
+System_Ext(видеокамеры, "Видеокамеры и IoT", "Разные производители")
+System_Ext(уведомления, "Уведомления", "SMS/Email/Push")
+System_Ext(erp, "ERP (1С:Агро)", "Склад, финансы, кадры")
+
+Rel(фермер, local_ui, "Доступ через локальную сеть")
+Rel(ветеринар, local_ui, "Просмотр данных о животных")
+Rel(дежурный, alerting_agent, "Местные уведомления")
+
+Rel(agent, видеокамеры, "Сбор данных от IoT")
+Rel(alerting_agent, уведомления, "Push/SMS/Email")
+
+Rel(agent, central_analytics, "Отправка агрегированных данных (раз в час)")
+Rel(central_analytics, central_db, "Сохранение данных")
+Rel(agent, erp, "Интеграция с запасами кормов (при доступе)")
+
+@enduml

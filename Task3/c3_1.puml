@@ -1,0 +1,22 @@
+@startuml C3_AnimalMonitoringService
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C3 — Animal Monitoring Service (Kotlin/Spring)
+
+Container_Boundary(animal_monitoring, "Animal Monitoring Service") {
+
+  Component(rest_api, "REST API Controller", "Spring MVC", "Обрабатывает входящие запросы от API Gateway")
+  Component(data_processor, "Behavior Analysis Module", "Kotlin", "Анализ данных о поведении животных, фиксация аномалий")
+  Component(video_adapter, "Video Stream Adapter", "gRPC/WebSocket", "Подключение и обработка потоков от агентов")
+  Component(event_publisher, "Event Publisher", "Kafka/RabbitMQ", "Публикация событий о нарушениях или тревогах")
+  Component(health_checker, "Health Analyzer", "Kotlin", "Оценка состояния животных (болезнь, гибель)")
+  Component(repository, "Animal Data Repository", "Spring Data JPA", "Доступ к хранилищу данных")
+}
+
+Rel(rest_api, data_processor, "Передаёт команды на анализ")
+Rel(video_adapter, data_processor, "Стриминг видео данных")
+Rel(data_processor, health_checker, "Вызывает проверки здоровья")
+Rel(data_processor, event_publisher, "Отправка событий")
+Rel(data_processor, repository, "Чтение/запись данных")
+
+@enduml

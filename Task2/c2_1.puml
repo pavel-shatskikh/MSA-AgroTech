@@ -1,0 +1,48 @@
+@startuml C2_Основное_решение
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C2 — Основное решение (Kotlin/Spring + Rust агенты)
+
+Person(фермер, "Фермер", "Следит за животными, получает уведомления и отчёты")
+Person(ветеринар, "Ветеринар", "Получает данные о состоянии животных")
+Person(менеджер, "Менеджер", "Смотрит аналитику и прогнозы")
+Person(дежурный, "Дежурный", "Получает локальные уведомления")
+
+System_Boundary(мониторинг, "Платформа мониторинга скота (MVP)") {
+  Container(api_gateway, "API Gateway", "Spring Cloud Gateway API", "Единая точка входа для клиентов и агентов")
+  Container(monitoring_service, "Animal Monitoring Service", "Kotlin/Spring", "Обрабатывает данные от агентов: поведение животных, драки, здоровье")
+  Container(feeding_service, "Feeding Management Service", "Kotlin/Spring", "Планирование кормления и управление кормушками/поилками")
+  Container(alerting_service, "Alerting Service", "Kotlin/Spring", "Генерация уведомлений (SMS, Push, Email) при аномалиях")
+  Container(analytics_service, "Analytics & Reporting Service", "Kotlin/Spring", "Агрегация данных, построение отчётов, прогнозирование")
+  ContainerDb(data_lake, "Data Lake / Time-Series DB", "TimescaleDB/PostgreSQL", "Хранение IoT и видеоаналитики")
+  Container(auth_service, "Auth & User Management", "Keycloak", "Управление пользователями и ролями")
+}
+
+System_Boundary(агенты, "Агенты на фермах") {
+  Container(agent, "Farm Agent", "Rust", "Edge-обработка данных (видео, сенсоры), кэш, синхронизация")
+}
+
+System_Ext(erp, "ERP (1С:Агро)", "Склад, финансы, кадры")
+System_Ext(видеокамеры, "Видеокамеры и IoT", "Разные производители")
+System_Ext(уведомления, "Уведомления", "SMS/Email/Push")
+
+Rel(фермер, api_gateway, "Доступ через Web/Mobile")
+Rel(ветеринар, api_gateway, "Отчёты и уведомления")
+Rel(менеджер, analytics_service, "Дашборды, прогнозы")
+Rel(дежурный, agent, "Локальные уведомления")
+
+Rel(agent, api_gateway, "Отправка данных")
+Rel(agent, видеокамеры, "Получение потоков данных")
+
+Rel(api_gateway, monitoring_service, "REST/gRPC")
+Rel(api_gateway, feeding_service, "REST/gRPC")
+Rel(api_gateway, alerting_service, "REST/gRPC")
+Rel(api_gateway, analytics_service, "REST/gRPC")
+Rel(api_gateway, auth_service, "Auth API")
+
+Rel(monitoring_service, data_lake, "Сохранение данных")
+Rel(analytics_service, data_lake, "Чтение данных")
+Rel(feeding_service, erp, "Запасы кормов")
+Rel(alerting_service, уведомления, "Push/SMS/Email")
+
+@enduml

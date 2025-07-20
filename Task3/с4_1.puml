@@ -1,0 +1,56 @@
+@startuml C4_AnimalMonitoringService_Code
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 — Animal Monitoring Service (Kotlin/Spring)
+
+package "api" {
+  class AnimalController <<REST Controller>> {
+    +getAnimalStatus(id: UUID): AnimalStatusDTO
+    +analyzeAnimalBehavior(request: BehaviorRequest): AnalysisResult
+  }
+}
+
+package "service" {
+  class BehaviorAnalysisService {
+    +analyze(videoData: VideoFrame, sensorData: SensorData): AnalysisResult
+  }
+  class HealthCheckService {
+    +checkHealth(animalId: UUID): HealthReport
+  }
+}
+
+package "integration" {
+  class VideoStreamClient <<gRPC Client>> {
+    +getVideoStream(animalId: UUID): VideoFrame
+  }
+  class EventPublisher <<Kafka Producer>> {
+    +publish(event: AlertEvent)
+  }
+}
+
+package "repository" {
+  class AnimalRepository <<Spring Data>> {
+    +findById(id: UUID): AnimalEntity
+    +save(entity: AnimalEntity)
+  }
+}
+
+package "model" {
+  class AnimalEntity {
+    UUID id
+    String tag
+    AnimalStatus status
+  }
+  class BehaviorRequest
+  class AnalysisResult
+  class HealthReport
+}
+
+AnimalController --> BehaviorAnalysisService
+BehaviorAnalysisService --> VideoStreamClient
+BehaviorAnalysisService --> EventPublisher
+BehaviorAnalysisService --> AnimalRepository
+HealthCheckService --> AnimalRepository
+AnimalRepository --> AnimalEntity
+
+@enduml

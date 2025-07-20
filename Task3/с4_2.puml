@@ -1,0 +1,88 @@
+@startuml C4_FarmAgent_Alt_Code
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 — Farm Agent (Толстый, Rust)
+
+package "video" {
+  class VideoCollector {
+    +capture_stream(): VideoFrame
+    +get_snapshot(): Frame
+  }
+  class VideoAnalyticsEngine {
+    +analyze_behavior(frames: List<Frame>): BehaviorReport
+    +count_animals(frames: List<Frame>): Int
+    +detect_anomalies(frames: List<Frame>): List<AlertEvent>
+  }
+  class FramePreprocessor {
+    +filter_noise(frame: Frame): Frame
+    +resize(frame: Frame, width: u32, height: u32): Frame
+  }
+}
+
+package "sensors" {
+  class SensorReader {
+    +read_temperature(): f32
+    +read_motion(): bool
+    +read_rfid(): String
+    +read_water_filter(): FilterStatus
+  }
+}
+
+package "feeding" {
+  class FeedingController {
+    +dispense_food(amount: f32)
+    +check_feeder_status(): FeederStatus
+  }
+}
+
+package "alerts" {
+  class AlertModule {
+    +trigger_alert(event: AlertEvent)
+    +send_local_notification(msg: String)
+  }
+}
+
+package "storage" {
+  class LocalDB {
+    +save_behavior(report: BehaviorReport)
+    +save_anomalies(events: List<AlertEvent>)
+    +load_recent_data(): List<BehaviorReport>
+  }
+}
+
+package "sync" {
+  class SyncModule {
+    +aggregate_data()
+    +send_summary()
+  }
+}
+
+package "ui" {
+  class LocalWebUI <<React>> {
+    +show_dashboard()
+    +control_feeding()
+    +view_alerts()
+  }
+}
+
+class VideoFrame
+class Frame
+class BehaviorReport
+class AlertEvent
+class FilterStatus
+class FeederStatus
+
+VideoCollector --> FramePreprocessor
+FramePreprocessor --> VideoAnalyticsEngine
+VideoAnalyticsEngine --> BehaviorReport
+VideoAnalyticsEngine --> AlertEvent
+SensorReader --> VideoAnalyticsEngine
+FeedingController --> LocalDB
+VideoAnalyticsEngine --> LocalDB
+AlertModule --> LocalDB
+SyncModule --> LocalDB
+LocalWebUI --> LocalDB
+LocalWebUI --> FeedingController
+LocalWebUI --> AlertModule
+
+@enduml
