@@ -1,0 +1,29 @@
+@startuml C3_FarmAgent_Alt
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C3 — Farm Agent (Альтернативное решение, Rust)
+
+Container_Boundary(farm_agent, "Farm Agent (Толстый)") {
+
+  Component(video_collector, "Video Collector", "Rust", "Сбор видеопотока с камер")
+  Component(video_analytics, "Video Analytics Engine", "Rust + OpenCV", "Локальная видеоаналитика: определение драк, болезней, пересчёт животных")
+  Component(sensor_reader, "Sensor Reader", "Rust", "Сбор данных от IoT-датчиков (температура, фильтры воды, RFID)")
+  Component(feeding_module, "Feeding Controller", "Rust", "Локальное управление кормушками и поилками")
+  Component(alert_module, "Alert Module", "Rust", "Локальные уведомления и тревоги")
+  Component(local_db, "Local DB", "SQLite/InfluxDB", "Хранение всех данных и аналитики")
+  Component(sync_module, "Sync Module", "Rust + MQTT/REST", "Отправка агрегированных данных на центральный сервер (раз в час)")
+  Component(local_ui, "Local Web UI", "React (встроенный веб-сервер)", "Панель управления для фермера")
+}
+
+Rel(video_collector, video_analytics, "Поток видеоданных")
+Rel(sensor_reader, video_analytics, "Данные сенсоров для аналитики")
+Rel(video_analytics, feeding_module, "Вызывает корректировку кормления")
+Rel(video_analytics, alert_module, "Передача событий тревог")
+Rel(video_analytics, local_db, "Сохранение результатов аналитики")
+Rel(alert_module, local_db, "Сохраняет информацию о тревогах")
+Rel(sync_module, local_db, "Читает агрегированные данные")
+Rel(local_ui, local_db, "Просмотр истории данных")
+Rel(local_ui, feeding_module, "Команды управления")
+Rel(local_ui, alert_module, "Просмотр тревог")
+
+@enduml
